@@ -1,0 +1,49 @@
+name: Pella Auto Renew
+
+on:
+  schedule:
+    # 每 6 小时一次（UTC）；未配置链接/会话时脚本会直接跳过（not_configured）
+    - cron: '30 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      claim_url:
+        description: 'Pella 续期短链（直喂模式，如 https://cuty.io/xxxx）'
+        required: false
+        type: string
+
+jobs:
+  renew:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run renewal
+        run: xvfb-run -a node proxy_runner.js
+        env:
+          PELLA_CLAIM_URL: ${{ inputs.claim_url || secrets.PELLA_CLAIM_URL }}
+          PELLA_STORAGE_STATE: ${{ secrets.PELLA_STORAGE_STATE }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          WEBSHARE_PROXY_LIST_URL: ${{ secrets.WEBSHARE_PROXY_LIST_URL }}
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/
+          if-no-files-found: ignore
+          retention-days: 7
