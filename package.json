@@ -1,0 +1,13 @@
+{
+  "name": "pella-renew",
+  "version": "1.0.0",
+  "description": "Pella free instance auto-renewal (GitHub Actions, Playwright)",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "start": "node proxy_runner.js"
+  },
+  "dependencies": {
+    "playwright": "^1.49.1"
+  }
+}
